@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme:light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme:dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="รายรับรายจ่าย">
+<title>Income &amp; Expenses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2F2F7;--glass:rgba(255,255,255,.62);--edge:rgba(255,255,255,.75);--tile:rgba(120,120,128,.1);--field:rgba(120,120,128,.12);--card:#fff;--ink:#1C1C1E;--mute:#636366;--line:rgba(60,60,67,.14);--in:#248A3D;--out:#D70015;--blue:#007AFF;--warn:#C93400;--acc:#007AFF;--b1:rgba(10,132,255,.28);--b2:rgba(191,90,242,.2);--b3:rgba(52,199,89,.18);--sh:0 10px 36px rgba(0,0,0,.07)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#000;--glass:rgba(44,44,46,.55);--edge:rgba(255,255,255,.12);--tile:rgba(255,255,255,.08);--field:rgba(255,255,255,.1);--card:#1C1C1E;--ink:#F5F5F7;--mute:#98989D;--line:rgba(255,255,255,.12);--in:#30D158;--out:#FF453A;--blue:#0A84FF;--warn:#FF9F0A;--acc:#0A84FF;--b1:rgba(10,132,255,.32);--b2:rgba(191,90,242,.26);--b3:rgba(48,209,88,.16);--sh:0 10px 36px rgba(0,0,0,.4)}}
+:root[data-theme=dark]{--bg:#000;--glass:rgba(44,44,46,.55);--edge:rgba(255,255,255,.12);--tile:rgba(255,255,255,.08);--field:rgba(255,255,255,.1);--card:#1C1C1E;--ink:#F5F5F7;--mute:#98989D;--line:rgba(255,255,255,.12);--in:#30D158;--out:#FF453A;--blue:#0A84FF;--warn:#FF9F0A;--acc:#0A84FF;--b1:rgba(10,132,255,.32);--b2:rgba(191,90,242,.26);--b3:rgba(48,209,88,.16);--sh:0 10px 36px rgba(0,0,0,.4)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","IBM Plex Sans Thai",system-ui,sans-serif;padding:calc(20px + env(safe-area-inset-top)) 16px 20px;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(60% 45% at 10% 0%,var(--b1),transparent),radial-gradient(50% 40% at 100% 15%,var(--b2),transparent),radial-gradient(70% 45% at 40% 100%,var(--b3),transparent)}
+main{max-width:920px;margin:0 auto;display:grid;gap:14px}
+.card{background:var(--glass);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border:1px solid var(--edge);border-radius:26px;padding:18px;box-shadow:var(--sh),inset 0 1px 0 rgba(255,255,255,.35)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-size:34px;line-height:1.15;margin:0;font-weight:700;letter-spacing:-.02em}
+h2{font-size:19px;margin:0 0 12px;font-weight:600;letter-spacing:-.01em}
+.nav{display:flex;align-items:center;gap:6px;background:var(--glass);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border:1px solid var(--edge);border-radius:999px;padding:4px;box-shadow:var(--sh)}
+.nav b{min-width:150px;text-align:center;font-size:17px;font-weight:600}
+.nav button{background:none;border:0;color:var(--blue);min-width:40px;height:40px;border-radius:999px;font-size:22px;line-height:1;padding:0 12px}
+.nav #today{font-size:15px;font-weight:500;background:var(--tile)}
+button,select,input{font:inherit;color:inherit}
+button{background:var(--tile);border:0;border-radius:999px;padding:9px 16px;cursor:pointer;color:var(--blue);font-weight:500;transition:transform .12s,background .2s}
+button:active{transform:scale(.96)}
+button.pri{background:var(--blue);color:#fff;font-weight:600;padding:11px 20px}
+button.lnk{background:none;color:var(--blue);padding:4px 8px;font-size:14px;font-weight:500}
+button.lnk[data-d]{color:var(--out)}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--blue) 55%,transparent);outline-offset:2px}
+input,select{background:var(--field);border:0;border-radius:14px;padding:10px 12px;width:100%;min-height:44px}
+.sum{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sum div{background:var(--tile);border-radius:18px;padding:12px 14px}
+.sum small{color:var(--mute);display:block;font-size:13px;margin-bottom:2px}
+.sum strong{font-size:23px;font-weight:700;letter-spacing:-.02em}
+.sum div:last-child{background:var(--blue);color:#fff}
+.sum div:last-child small{color:rgba(255,255,255,.8)}
+.sum div:last-child strong.neg{color:#fff;text-decoration:underline wavy rgba(255,255,255,.7)}
+.in{color:var(--in)}.out{color:var(--out)}.neg{color:var(--out)}
+.form{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1.2fr auto;gap:10px;align-items:end}
+.form label{display:grid;gap:4px;font-size:13px;color:var(--mute)}
+.form .n{display:none}.form .n.show{display:grid}
+table{width:100%;border-collapse:collapse}
+th{font-weight:500;color:var(--mute);font-size:13px;text-align:right;border-bottom:1px solid var(--line);padding:6px 8px}
+td{padding:11px 8px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+tbody tr:last-child td{border-bottom:0}
+tr.carry td{color:var(--mute);font-size:14px}
+tr.carry-out td{font-weight:700;border-top:1px solid var(--line)}
+.tag{font-size:12px;color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent);border-radius:99px;padding:1px 9px;margin-left:8px;white-space:nowrap;font-weight:500}
+.scroll{overflow-x:auto}
+tbody tr.fc{cursor:pointer}tbody tr.fc:hover td{background:var(--tile)}
+tr.cur td{font-weight:700;background:color-mix(in srgb,var(--blue) 12%,transparent)}
+tr.cur td:first-child{border-radius:12px 0 0 12px}tr.cur td:last-child{border-radius:0 12px 12px 0}
+.empty{color:var(--mute);padding:18px 0;text-align:center}
+.foot{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:var(--mute);font-size:13px}
+.foot input{width:130px}
+dialog{background:var(--glass);-webkit-backdrop-filter:blur(40px) saturate(180%);backdrop-filter:blur(40px) saturate(180%);color:var(--ink);border:1px solid var(--edge);border-radius:26px;padding:22px;max-width:320px;white-space:pre-line;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(0,0,0,.3)}
+dialog .act{display:flex;gap:8px;margin-top:18px}
+dialog .act button{flex:1}
+@media(prefers-reduced-motion:reduce){button{transition:none}}
+@media(max-width:760px){.sum{grid-template-columns:1fr 1fr}.form{grid-template-columns:1fr 1fr}.form .name{grid-column:1/-1}}
+@media(max-width:600px){
+  body{padding:calc(10px + env(safe-area-inset-top)) 10px calc(24px + env(safe-area-inset-bottom))}
+  main{gap:10px}
+  .card{padding:14px;border-radius:24px}
+  header{position:sticky;top:calc(6px + env(safe-area-inset-top));z-index:5}
+  h1{display:none}
+  .nav{width:100%}
+  .nav b{flex:1;min-width:0}
+  .sum strong{font-size:20px}
+  input,select{font-size:16px}
+  .form button{grid-column:1/-1;min-height:48px}
+  .items thead{display:none}
+  .items tbody tr{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 10px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .items tbody tr:last-child{border-bottom:0}
+  .items td{border:0!important;padding:0;text-align:left}
+  .items td:empty{display:none}
+  .items td:nth-child(1){grid-column:1;grid-row:1}
+  .items td:nth-child(2),.items td:nth-child(3){grid-column:2;grid-row:1;text-align:right;font-weight:600}
+  .items td:nth-child(4){grid-column:1;grid-row:2;color:var(--mute);font-size:13px}
+  .items td:nth-child(4)::before{content:var(--bal,"Balance ")}
+  .items td:nth-child(5){grid-column:2;grid-row:2;text-align:right;white-space:nowrap}
+  .items tr.carry td:nth-child(4),.items tr.carry-out td:nth-child(4){grid-column:2;grid-row:1;text-align:right;font-size:inherit;color:inherit;font-weight:600}
+  .items tr.carry td:nth-child(4)::before,.items tr.carry-out td:nth-child(4)::before{content:none}
+  .items tr.carry-out{border-top:1px solid var(--line)}
+  .items td.empty{grid-column:1/-1;text-align:center}
+  button.lnk{min-height:40px;padding:6px 12px}
+  .fct th,.fct td{padding:11px 6px;font-size:14px}
+  .fct th:nth-child(2),.fct td:nth-child(2),.fct th:nth-child(3),.fct td:nth-child(3){display:none}
+  .foot{flex-direction:column;align-items:stretch}
+  .foot button,.foot input{width:100%;min-height:46px}
+  .foot label{display:grid;gap:4px}
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1 data-k="title"></h1>
+  <div class="nav">
+    <button id="prev">‹</button><b id="mlabel"></b><button id="next">›</button>
+    <button id="today" data-k="today"></button>
+  </div>
+</header>
+
+<section class="card sum" id="sum"></section>
+
+<section class="card">
+  <h2 id="ftitle"></h2>
+  <div class="form">
+    <label class="name"><span data-k="item"></span><input id="name"></label>
+    <label><span data-k="type"></span><select id="type"><option value="in" data-k="inc"></option><option value="out" data-k="exp"></option></select></label>
+    <label><span data-k="amount"></span><input id="amt" type="number" min="0" step="any" inputmode="decimal"></label>
+    <label><span data-k="start"></span><input id="start" type="month"></label>
+    <label><span data-k="repeat"></span><select id="rep"><option value="1" data-k="once"></option><option value="0" data-k="monthly"></option><option value="n" data-k="inst"></option></select></label>
+    <label class="n" id="nwrap"><span data-k="nper"></span><input id="nper" type="number" min="2" value="12"></label>
+    <button class="pri" id="save"></button>
+  </div>
+</section>
+
+<section class="card">
+  <h2 data-k="this_m"></h2>
+  <div class="scroll"><table class="items">
+    <thead><tr><th data-k="item"></th><th data-k="inc"></th><th data-k="exp"></th><th data-k="total"></th><th></th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+</section>
+
+<section class="card">
+  <h2><span data-k="fc_t"></span> <span style="color:var(--mute);font-weight:400;font-size:13px" data-k="fc_hint"></span></h2>
+  <div class="scroll"><table class="fct">
+    <thead><tr><th data-k="month"></th><th data-k="inc"></th><th data-k="exp"></th><th data-k="net"></th><th data-k="cum"></th></tr></thead>
+    <tbody id="fc"></tbody>
+  </table></div>
+</section>
+
+<div class="foot">
+  <label><span data-k="open_b"></span> <input id="open" type="number" step="any" inputmode="decimal"></label>
+  <button id="exp" data-k="exp_b"></button>
+  <button id="imp" data-k="imp_b"></button>
+  <input id="file" type="file" accept=".json" hidden>
+  <button id="theme" data-k="theme"></button>
+  <button id="lang"></button>
+  <span data-k="note"></span>
+</div>
+</main>
+
+<dialog id="dlg"><div id="dmsg"></div><div class="act"><button id="dno"></button><button class="pri" id="dok"></button></div></dialog>
+
+<script>
+const KEY="finance-tracker-v1",LK=KEY+"-lang";
+const MT=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+const ME=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const D={
+title:["รายรับรายจ่าย","Income & Expenses"],today:["เดือนนี้","Today"],
+add_t:["เพิ่มรายการ","Add item"],edit_t:["แก้ไขรายการ","Edit item"],
+item:["รายการ","Item"],type:["ประเภท","Type"],amount:["จำนวนเงิน","Amount"],start:["เริ่มเดือน","Start month"],repeat:["การเกิดซ้ำ","Repeat"],nper:["จำนวนงวด","Installments"],
+inc:["รายรับ","Income"],exp:["รายจ่าย","Expense"],once:["ครั้งเดียว","One-time"],monthly:["ทุกเดือน","Monthly"],inst:["ผ่อน (ระบุงวด)","Installment"],
+add:["เพิ่ม","Add"],savebtn:["บันทึก","Save"],this_m:["รายการของเดือนนี้","This month"],total:["รวม","Total"],
+fc_t:["คาดการณ์ 12 เดือนข้างหน้า","12-month forecast"],fc_hint:["(กดที่แถวเพื่อดูเดือนนั้น)","(tap a row to open that month)"],
+month:["เดือน","Month"],net:["สุทธิ","Net"],cum:["คงเหลือสะสม","Balance"],
+s_open:["ยอดยกมา","Brought forward"],s_end:["คงเหลือสิ้นเดือน","End of month"],
+from:["ยอดยกมาจาก","Brought forward from"],to:["คงเหลือ ยกไป","Carried forward to"],bal:["คงเหลือ","Balance"],
+open_b:["ยอดเงินตั้งต้น","Opening balance"],exp_b:["สำรองข้อมูล (JSON)","Backup (JSON)"],imp_b:["นำเข้าข้อมูล","Import"],theme:["โหมดมืด/สว่าง","Dark / Light"],
+note:["ข้อมูลเก็บในเบราว์เซอร์เครื่องนี้ ควรสำรองเป็นระยะ","Data stays in this browser. Back up regularly."],
+empty:["ยังไม่มีรายการในเดือนนี้ เพิ่มจากฟอร์มด้านบน","Nothing this month yet. Add an item above."],
+editb:["แก้ไข","Edit"],delb:["ลบ","Delete"],cancel:["ยกเลิก","Cancel"],ok:["ตกลง","OK"],
+ph:["เช่น Salary, ผ่อนมือถือ","e.g. Salary, Phone installment"],
+need:["กรอกชื่อรายการ จำนวนเงิน และเดือนเริ่มต้นให้ครบ","Please fill in the name, amount and start month."],
+del_q:['ลบ "{n}" ?\nรายการนี้จะหายจากทุกเดือน','Delete "{n}"?\nIt will be removed from every month.'],
+bad:["ไฟล์ไม่ถูกต้อง","Invalid file."],imp_q:["นำเข้าข้อมูลนี้และแทนที่ข้อมูลปัจจุบัน?","Import this file and replace current data?"],
+prev:["เดือนก่อน","Previous month"],next:["เดือนถัดไป","Next month"]
+};
+const $=id=>document.getElementById(id);
+let S={items:[],opening:0},cur=ym(new Date()),editId=null,L="mix";
+try{const r=localStorage.getItem(KEY);if(r)S=JSON.parse(r)}catch(e){}
+try{L=localStorage.getItem(LK)||"mix"}catch(e){}
+function t(k,sep=" "){const[a,b]=D[k];return L==="th"?a:L==="en"?b:a+sep+b}
+function ask(msg,cancel=true){
+  return new Promise(res=>{
+    const d=$("dlg");$("dmsg").textContent=msg;$("dno").style.display=cancel?"":"none";
+    $("dno").textContent=t("cancel");$("dok").textContent=t("ok");
+    const done=v=>{$("dok").onclick=$("dno").onclick=d.onclose=null;if(d.open)d.close();res(v)};
+    $("dok").onclick=()=>done(true);$("dno").onclick=()=>done(false);d.onclose=()=>done(false);
+    d.showModal();
+  });
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function ym(d){return d.getFullYear()*12+d.getMonth()}
+function toIdx(v){const[a,b]=v.split("-").map(Number);return a*12+b-1}
+function toStr(i){return Math.floor(i/12)+"-"+String(i%12+1).padStart(2,"0")}
+function label(i,short){
+  if(L==="th")return (short?MT[i%12].slice(0,short):MT[i%12])+" "+(Math.floor(i/12)+543);
+  return (short?ME[i%12].slice(0,short):ME[i%12])+" "+Math.floor(i/12);
+}
+const fmt=n=>n.toLocaleString("th-TH",{maximumFractionDigits:2});
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function active(it,i){const s=toIdx(it.start);return i>=s&&(it.months===0||i<s+it.months)}
+function itemsOf(i){return S.items.filter(it=>active(it,i))}
+function totals(i){let a=0,b=0;itemsOf(i).forEach(it=>it.type==="in"?a+=it.amount:b+=it.amount);return{a,b,net:a-b}}
+function firstIdx(){return S.items.length?Math.min(...S.items.map(it=>toIdx(it.start))):cur}
+function carry(i){let c=S.opening||0;for(let k=firstIdx();k<i;k++)c+=totals(k).net;return c}
+function tag(it,i){
+  if(it.months===0)return`<span class="tag">${t("monthly")}</span>`;
+  if(it.months>1)return`<span class="tag">${L==="en"?"Pmt":"งวด"} ${i-toIdx(it.start)+1}/${it.months}</span>`;
+  return"";
+}
+
+function render(){
+  $("mlabel").textContent=label(cur);
+  const x0=totals(cur),c=carry(cur),end=c+x0.net;
+  $("sum").innerHTML=`
+   <div><small>${t("s_open")}</small><strong class="${c<0?"neg":""}">${fmt(c)}</strong></div>
+   <div><small>${t("inc")}</small><strong class="in">${fmt(x0.a)}</strong></div>
+   <div><small>${t("exp")}</small><strong class="out">${fmt(x0.b)}</strong></div>
+   <div><small>${t("s_end")}</small><strong class="${end<0?"neg":""}">${fmt(end)}</strong></div>`;
+
+  const list=itemsOf(cur).sort((x,y)=>(x.type===y.type?0:x.type==="in"?-1:1));
+  let run=c,html=`<tr class="carry"><td>${t("from")} ${esc(label(cur-1,3))}</td><td></td><td></td><td>${fmt(run)}</td><td></td></tr>`;
+  list.forEach(it=>{
+    run+=it.type==="in"?it.amount:-it.amount;
+    html+=`<tr><td>${esc(it.name)}${tag(it,cur)}</td>
+      <td class="in">${it.type==="in"?fmt(it.amount):""}</td>
+      <td class="out">${it.type==="out"?fmt(it.amount):""}</td>
+      <td class="${run<0?"neg":""}">${fmt(run)}</td>
+      <td><button class="lnk" data-e="${it.id}">${t("editb")}</button><button class="lnk" data-d="${it.id}">${t("delb")}</button></td></tr>`;
+  });
+  if(!list.length)html+=`<tr><td colspan="5" class="empty">${t("empty"," / ")}</td></tr>`;
+  html+=`<tr class="carry-out"><td>${t("to")} ${esc(label(cur+1,3))}</td><td></td><td></td><td class="${run<0?"neg":""}">${fmt(run)}</td><td></td></tr>`;
+  $("rows").innerHTML=html;
+
+  let f="",bal=c;
+  for(let k=cur;k<cur+12;k++){
+    const x=totals(k);bal+=x.net;
+    f+=`<tr class="fc ${k===cur?"cur":""}" data-m="${k}"><td>${label(k,3)}</td><td class="in">${fmt(x.a)}</td><td class="out">${fmt(x.b)}</td>
+    <td class="${x.net<0?"neg":""}">${fmt(x.net)}</td><td class="${bal<0?"neg":""}">${fmt(bal)}</td></tr>`;
+  }
+  $("fc").innerHTML=f;
+  $("open").value=S.opening||"";
+}
+
+function setFormMode(){$("ftitle").textContent=t(editId?"edit_t":"add_t");$("save").textContent=t(editId?"savebtn":"add")}
+function resetForm(){
+  editId=null;$("name").value="";$("amt").value="";$("rep").value="1";$("nwrap").classList.remove("show");
+  $("start").value=toStr(cur);setFormMode();
+}
+function apply(){
+  document.documentElement.lang=L==="en"?"en":"th";
+  document.querySelectorAll("[data-k]").forEach(e=>{e.textContent=t(e.dataset.k,e.dataset.k==="note"?" / ":" ")});
+  $("name").placeholder=t("ph");
+  $("prev").setAttribute("aria-label",t("prev"));$("next").setAttribute("aria-label",t("next"));
+  document.title=t("title");
+  $("lang").textContent={mix:"ไทย + EN",th:"ไทย",en:"EN"}[L];
+  document.documentElement.style.setProperty("--bal",JSON.stringify(t("bal")+" "));
+  setFormMode();render();
+}
+$("lang").onclick=()=>{L=L==="mix"?"th":L==="th"?"en":"mix";try{localStorage.setItem(LK,L)}catch(e){}apply()};
+$("rep").onchange=e=>$("nwrap").classList.toggle("show",e.target.value==="n");
+
+$("save").onclick=()=>{
+  const name=$("name").value.trim(),amt=parseFloat($("amt").value),start=$("start").value;
+  if(!name||!(amt>=0)||!start){ask(t("need","\n"),false);return}
+  const r=$("rep").value;
+  const months=r==="n"?Math.max(2,parseInt($("nper").value)||2):parseInt(r);
+  const it={id:editId||Date.now().toString(36),name,type:$("type").value,amount:amt,start,months};
+  if(editId)S.items=S.items.map(x=>x.id===editId?it:x);else S.items.push(it);
+  save();resetForm();render();
+};
+$("rows").onclick=async e=>{
+  const d=e.target.dataset.d,ed=e.target.dataset.e;
+  if(d){const it=S.items.find(x=>x.id===d);
+    if(await ask(t("del_q","\n").replace("{n}",it.name).replace("{n}",it.name))){S.items=S.items.filter(x=>x.id!==d);save();render()}}
+  if(ed){const it=S.items.find(x=>x.id===ed);editId=ed;
+    $("name").value=it.name;$("type").value=it.type;$("amt").value=it.amount;$("start").value=it.start;
+    $("rep").value=it.months===0?"0":it.months===1?"1":"n";
+    $("nwrap").classList.toggle("show",it.months>1);if(it.months>1)$("nper").value=it.months;
+    setFormMode();$("name").focus();}
+};
+$("fc").onclick=e=>{const tr=e.target.closest("tr");if(tr){cur=+tr.dataset.m;render();scrollTo({top:0,behavior:"smooth"})}};
+$("prev").onclick=()=>{cur--;render()};
+$("next").onclick=()=>{cur++;render()};
+$("today").onclick=()=>{cur=ym(new Date());render()};
+$("open").onchange=e=>{S.opening=parseFloat(e.target.value)||0;save();render()};
+
+$("exp").onclick=()=>{
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:"application/json"}));
+  a.download="finance-backup-"+toStr(ym(new Date()))+".json";a.click();
+};
+$("imp").onclick=()=>$("file").click();
+$("file").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=async()=>{let d;try{d=JSON.parse(r.result);if(!Array.isArray(d.items))throw 0}catch(x){ask(t("bad","\n"),false);return}
+    if(await ask(t("imp_q","\n"))){S=d;save();render()}};
+  r.readAsText(f);e.target.value="";
+};
+$("theme").onclick=()=>{
+  const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+  r.dataset.theme=dark?"light":"dark";
+};
+
+$("start").value=toStr(cur);
+apply();
+</script>
+</body>
+</html>
