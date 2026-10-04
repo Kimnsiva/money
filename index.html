@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme:light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme:dark)">
+<script>try{const th=localStorage.getItem("finance-theme");if(th==="dark"||th==="light")document.documentElement.dataset.theme=th}catch(e){}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Income &amp; Expenses">
@@ -123,7 +124,16 @@ dialog .act button{flex:1}
   .tabs{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));width:auto;z-index:20}
   .tabs button{flex:1;padding:11px 6px}
 }
+.sbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:var(--mute);font-size:13px;margin-top:4px}
+.sd{width:8px;height:8px;border-radius:50%;background:var(--mute);display:inline-block}
+.sd.on{background:var(--in)}.sd.busy{background:var(--warn);animation:sp 1s infinite}
+@keyframes sp{0%,100%{opacity:1}50%{opacity:.3}}
+#syncDlg{max-width:380px;text-align:left;white-space:normal}
+#syncDlg h2{text-align:center;margin:0 0 14px}
+#syncDlg label{display:grid;gap:4px;font-size:13px;color:var(--mute);margin-bottom:10px}
+#syncDlg a{color:var(--blue);font-size:13px}
 </style>
+<script src="sync.js"></script>
 </head>
 <body>
 <main>
@@ -210,9 +220,12 @@ dialog .act button{flex:1}
   <button id="lang"></button>
   <span data-k="note"></span>
 </div>
+<div class="sbar" id="syncBar"><span id="sst"></span><button id="sbtn"></button></div>
 </main>
 
 <dialog id="dlg"><div id="dmsg"></div><div class="act"><button id="dno"></button><button class="pri" id="dok"></button></div></dialog>
+
+<dialog id="syncDlg"></dialog>
 
 <script>
 const KEY="finance-tracker-v1",LK=KEY+"-lang2";
@@ -244,6 +257,8 @@ try{const r=localStorage.getItem(KEY);if(r)S=JSON.parse(r)}catch(e){}
 try{L=localStorage.getItem(LK)||"en"}catch(e){}
 function norm(){S.items=S.items||[];S.tax=S.tax||{};S.pvd=Object.assign({emp:0,er:0,bal:0,ret:5,yrs:10},S.pvd||{});S.funds=S.funds||[]}
 norm();
+const SK=KEY+"-sync";let G={};try{G=JSON.parse(localStorage.getItem(SK))||{}}catch(e){}
+let _pt=null,_busy=false,_skip=false;
 function t(k,sep=" "){const[a,b]=D[k];return L==="th"?a:L==="en"?b:b+sep+a}
 function ask(msg,cancel=true){
   return new Promise(res=>{
@@ -254,7 +269,7 @@ function ask(msg,cancel=true){
     d.showModal();
   });
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){if(!_skip)S._ts=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}dpush()}
 function ym(d){return d.getFullYear()*12+d.getMonth()}
 function toIdx(v){const[a,b]=v.split("-").map(Number);return a*12+b-1}
 function toStr(i){return Math.floor(i/12)+"-"+String(i%12+1).padStart(2,"0")}
@@ -293,7 +308,7 @@ function render(){
       <td class="in">${it.type==="in"?fmt(it.amount):""}</td>
       <td class="out">${it.type==="out"?fmt(it.amount):""}</td>
       <td class="${run<0?"neg":""}">${fmt(run)}</td>
-      <td><button class="lnk" data-e="${it.id}">${t("editb")}</button><button class="lnk" data-d="${it.id}">${t("delb")}</button></td></tr>`;
+      <td><button class="lnk" data-e="${it.id}" aria-label="${t("editb")}" >${t("editb")}</button><button class="lnk" data-d="${it.id}" aria-label="${t("delb")}" >${t("delb")}</button></td></tr>`;
   });
   if(!list.length)html+=`<tr><td colspan="5" class="empty">${t("empty"," / ")}</td></tr>`;
   html+=`<tr class="carry-out"><td>${t("to")} ${esc(label(cur+1,3))}</td><td></td><td></td><td class="${run<0?"neg":""}">${fmt(run)}</td><td></td></tr>`;
@@ -321,14 +336,14 @@ function apply(){
   document.title=t("title");
   $("lang").textContent={mix:"EN + ไทย",th:"ไทย",en:"EN"}[L];
   document.documentElement.style.setProperty("--bal",JSON.stringify(t("bal")+" "));
-  setFormMode();render();buildTax();buildFunds();setView(view);
+  setFormMode();render();buildTax();buildFunds();setView(view);syncUI();
 }
 $("lang").onclick=()=>{L=L==="en"?"mix":L==="mix"?"th":"en";try{localStorage.setItem(LK,L)}catch(e){}apply()};
 $("rep").onchange=e=>$("nwrap").classList.toggle("show",e.target.value==="n");
 
 $("save").onclick=()=>{
   const name=$("name").value.trim(),amt=parseFloat($("amt").value),start=$("start").value;
-  if(!name||!(amt>=0)||!start){ask(t("need","\n"),false);return}
+  if(!name||!(amt>0)||!start){ask(t("need","\n"),false);return}
   const r=$("rep").value;
   const months=r==="n"?Math.max(2,parseInt($("nper").value)||2):parseInt(r);
   const it={id:editId||Date.now().toString(36),name,type:$("type").value,amount:amt,start,months};
@@ -366,7 +381,9 @@ $("file").onchange=e=>{
 };
 $("theme").onclick=()=>{
   const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
-  r.dataset.theme=dark?"light":"dark";
+  const newTheme=dark?"light":"dark";
+  r.dataset.theme=newTheme;
+  try{localStorage.setItem("finance-theme",newTheme)}catch(e){}
 };
 
 
@@ -526,8 +543,10 @@ function renderFunds(){
     :`<p class="empty">${bi("ยังไม่มีกองทุน เพิ่มจากฟอร์มด้านบน","No funds yet. Add one above.")}</p>`;
 }
 
+$("sbtn").onclick=openSync;
 $("start").value=toStr(cur);
 apply();
+if(G.pat&&G.gid)pull();
 </script>
 </body>
 </html>
