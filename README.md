@@ -29,6 +29,7 @@
 
 ### 2. Thai Tax Planning (`tab: Tax`)
 - Automatic income aggregation from the Monthly tab (with per-item exclusion toggles)
+- **Per-month income entry** — type in actual income for past months (e.g. from payslips) when starting mid-year; an entered month replaces the Monthly-tab amount for that month (no double counting), blank months fall back to the Monthly tab
 - Full deduction engine covering:
   - 50% expense deduction (capped at ฿100,000)
   - Personal allowance (฿60,000)
@@ -100,7 +101,8 @@ index.html (single file)
       "extra": 0, "wht": 0, "sso": 0, "life": 0,
       "health": 0, "pen": 0, "home": 0, "spouse": 0,
       "child": 0, "parents": 0, "don": 0, "other": 0,
-      "excl": ["item-id-to-exclude"]
+      "excl": ["item-id-to-exclude"],
+      "mon": { "0": 40000, "8": 42000 }
     }
   },
   "pvd": {
@@ -121,6 +123,8 @@ index.html (single file)
 - `0` = recurring monthly (no end)
 - `1` = one-time entry
 - `N` (≥ 2) = installment over N months
+
+**`tax[year].mon`** — manual taxable income per month (`0` = January … `11` = December). A month present here overrides the Monthly-tab total for that month; missing months use the Monthly tab.
 
 ---
 

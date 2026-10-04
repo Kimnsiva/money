@@ -109,6 +109,14 @@ dialog .act button{flex:1}
 .fg label{display:grid;gap:4px;font-size:13px;color:var(--mute);align-content:start}
 .fg small{font-size:12px;opacity:.85}
 .fg .wide{grid-column:1/-1}
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.mg label{display:grid;gap:3px;font-size:12px;color:var(--mute);padding:8px;border-radius:12px;background:var(--tile);border:1px solid transparent;transition:border-color .2s,background .2s}
+.mg label.ov{border-color:var(--blue);background:var(--field)}
+.mg label.fut{opacity:.7}
+.mg label b{font-weight:600;color:var(--ink)}
+.mg input{width:100%;box-sizing:border-box}
+.mtot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:var(--mute)}
+.mtot b{color:var(--ink)}
 .kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
 .kv:last-child{border-bottom:0}.kv.big{font-weight:700}
 .chk{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
@@ -189,6 +197,7 @@ dialog .act button{flex:1}
   <section class="card">
     <div class="yr"><h2 id="tx_t"></h2><div class="nav"><button id="ty_p">‹</button><b id="ty_l"></b><button id="ty_n">›</button></div></div>
     <div id="taxInc"></div>
+    <div class="mt" id="taxMon"></div>
     <div class="fg mt" id="taxIn"></div>
   </section>
   <section class="card sum" id="taxSum"></section>
@@ -408,9 +417,12 @@ function marg(n){for(const[u,r]of BR)if(n<=u)return r;return .35}
 const tx=y=>(S.tax[y]=S.tax[y]||{excl:[]});
 const fundYear=ty=>S.funds.filter(f=>f.type===ty).reduce((a,f)=>a+(f.dca||0)*12+(f.lump||0),0);
 function incItems(y){return S.items.filter(i=>i.type==="in").map(it=>{let a=0;for(let k=y*12;k<y*12+12;k++)if(active(it,k))a+=it.amount;return{it,a}}).filter(r=>r.a>0)}
+function monAuto(y,m){const o=tx(y),k=y*12+m;return S.items.reduce((a,it)=>a+(it.type==="in"&&!o.excl.includes(it.id)&&active(it,k)?it.amount:0),0)}
+const monSet=(y,m)=>{const v=(tx(y).mon||{})[m];return typeof v==="number"&&isFinite(v)};
+const monInc=(y,m)=>monSet(y,m)?tx(y).mon[m]:monAuto(y,m);
 function calcTax(y){
   const o=tx(y),v=k=>+o[k]||0;
-  let inc=v("extra");incItems(y).forEach(r=>{if(!o.excl.includes(r.it.id))inc+=r.a});
+  let inc=v("extra");for(let m=0;m<12;m++)inc+=monInc(y,m);
   const exp=Math.min(inc*RU.expPct,RU.expMax);
   const pvdRaw=(S.pvd.emp||0)*12,pvd=Math.min(pvdRaw,inc*RU.pvdPct);
   const rmfRaw=fundYear("RMF"),rmf=Math.min(rmfRaw,inc*RU.rmfPct);
@@ -435,6 +447,10 @@ function calcTax(y){
 function buildTax(){
   const o=tx(TY),cap=n=>bi("สูงสุด","Max")+" "+fmt(n);
   $("tx_t").textContent=bi("วางแผนภาษี","Tax planning");
+  let mh=`<h2 style="font-size:15px">${bi("รายได้แต่ละเดือน (กรอกย้อนหลังได้)","Income per month (enter past months)")}</h2><div class="mg">`;
+  for(let m=0;m<12;m++){const mv=(o.mon||{})[m];
+    mh+=`<label id="tm_${m}"><span>${bi(MT[m],ME[m].slice(0,3))} <small class="tg"></small></span><input data-m="${m}" type="number" min="0" step="any" inputmode="decimal" value="${typeof mv==="number"?mv:""}" aria-label="${bi(MT[m],ME[m])}"></label>`}
+  $("taxMon").innerHTML=mh+`</div><div class="mtot" id="monTot"></div><p class="note">${bi("กรอกรายได้จริงของเดือนที่ผ่านมา (เช่น ตามสลิปเงินเดือน) เดือนที่เว้นว่างจะใช้ยอดจากแท็บรายเดือนแทน (ตัวเลขสีจาง) ยอดที่กรอกจะแทนที่ยอดจากแท็บรายเดือนของเดือนนั้น ไม่นับซ้ำ","Enter actual income for past months (e.g. from payslips). Blank months use the Monthly tab amount (shown faded). An entered amount replaces the Monthly amount for that month, so nothing is counted twice.")}</p>`;
   $("taxIn").innerHTML=
     nf("extra","รายได้อื่นๆ ทั้งปี (โบนัส ฯลฯ)","Other income (bonus etc.)",o.extra,"data-t")+
     nf("wht","ภาษีที่ถูกหักไว้แล้ว","Tax already withheld",o.wht,"data-t")+
@@ -451,6 +467,8 @@ function buildTax(){
 }
 $("taxIn").addEventListener("input",e=>{const k=e.target.dataset.t;if(!k)return;tx(TY)[k]=parseFloat(e.target.value)||0;save();renderTax()});
 $("taxInc").addEventListener("change",e=>{const id=e.target.dataset.i;if(!id)return;const o=tx(TY);o.excl=e.target.checked?o.excl.filter(z=>z!==id):[...o.excl,id];save();renderTax()});
+$("taxMon").addEventListener("input",e=>{const m=e.target.dataset.m;if(m==null)return;const o=tx(TY);o.mon=o.mon||{};const n=parseFloat(e.target.value);
+  if(e.target.value===""||!(n>=0))delete o.mon[m];else o.mon[m]=n;save();renderTax()});
 $("ty_p").onclick=()=>{TY--;buildTax();renderTax()};
 $("ty_n").onclick=()=>{TY++;buildTax();renderTax()};
 
@@ -461,7 +479,14 @@ function renderTax(){
   $("taxInc").innerHTML=`<h2 style="font-size:15px">${bi("รายได้จากแท็บรายเดือน","Income from Monthly")}</h2>`+
     (its.length?its.map(r=>`<label class="chk"><input type="checkbox" data-i="${r.it.id}" ${o.excl.includes(r.it.id)?"":"checked"}><span>${esc(r.it.name)}</span><b>${fmt(r.a)}</b></label>`).join("")
     :`<p class="note">${bi("ยังไม่มีรายรับของปีนี้ ไปเพิ่มในแท็บรายเดือนก่อน","No income this year yet. Add it in Monthly first.")}</p>`)+
-    `<p class="note">${bi("ติ๊กเฉพาะรายการที่เป็นเงินได้ที่ต้องเสียภาษี","Tick only items that count as taxable income")}</p>`;
+    `<p class="note">${bi("ติ๊กเฉพาะรายการที่เป็นเงินได้ที่ต้องเสียภาษี (มีผลกับเดือนที่ไม่ได้กรอกยอดเองด้านล่าง)","Tick only items that count as taxable income (applies to months you haven't filled in below)")}</p>`;
+  const now=ym(new Date());let set=0,mt=0;
+  for(let m=0;m<12;m++){const lb=$("tm_"+m);if(!lb)continue;const s=monSet(y,m),a=monAuto(y,m),k=y*12+m;
+    if(s)set++;mt+=monInc(y,m);
+    lb.classList.toggle("ov",s);lb.classList.toggle("fut",k>now&&!s);
+    lb.querySelector("input").placeholder=fmt(a);
+    lb.querySelector(".tg").textContent=s?bi("กรอกเอง","manual"):k>now?bi("ประมาณการ","est."):"";}
+  $("monTot").innerHTML=`<span>${bi("กรอกเอง","Entered")} <b>${set}</b>/12 ${bi("เดือน","months")}</span><span>${bi("รวมรายได้รายเดือน","Monthly income total")} <b>${fmt(mt)}</b></span>`;
   $("taxSum").innerHTML=tiles([[bi("รายได้รวม","Total income"),fmt(R.inc)],[bi("ลดหย่อนรวม","Total deductions"),fmt(R.totalDed)],[bi("เงินได้สุทธิ","Net taxable"),fmt(R.net)],[bi("ภาษีที่คาดว่าจะเสีย","Estimated tax"),fmt(R.tax)]]);
   const cp=bi("ถึงเพดาน","at cap"),m="−";
   const row=(l,val,n,b)=>`<div class="kv ${b?"big":""}"><span>${l}${n?` <span class="tag">${cp}</span>`:""}</span><b>${val}</b></div>`;
