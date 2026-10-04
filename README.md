@@ -52,6 +52,7 @@
 - **Responsive design** with mobile-first breakpoints at 600px and 760px
 - **Glassmorphism** UI with backdrop blur, subtle gradients, and micro-animations
 - **JSON backup/import** for data portability
+- **Cloud sync via GitHub Gist** across devices — see the step-by-step guide (Thai): [SYNC_GUIDE.md](SYNC_GUIDE.md)
 - **PWA-ready** meta tags (`apple-mobile-web-app-capable`, `viewport-fit: cover`)
 
 ---
